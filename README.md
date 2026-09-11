@@ -4,6 +4,10 @@ A small indoor cycling timer I built because I wanted to do ~30-minute HIIT ride
 
 I built the app with Claude as a non-technical operator and deployed it on Netlify.
 
+
+<img width="729" height="594" alt="Screenshot 2026-09-12 at 1 39 47 AM" src="https://github.com/user-attachments/assets/8824bf3f-7476-427f-8ae2-630ccce9f896" />
+
+
 ## What it does
 
 - Beginner, intermediate, and advanced HIIT presets
