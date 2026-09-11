@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HIIT Cycle">
+<meta name="theme-color" content="#0a0a14">
+<title>HIIT Cycling</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:#0a0a14;color:#f0f0f5;
+}
+.screen{
+  display:none;flex-direction:column;align-items:center;
+  min-height:100vh;min-height:100dvh;
+  padding:env(safe-area-inset-top,20px) 24px calc(env(safe-area-inset-bottom,20px) + 16px);
+  overflow-y:auto;
+}
+.screen.active{display:flex}
+
+/* SETUP */
+.setup-inner{width:100%;max-width:400px;padding-top:20px}
+h1{font-size:22px;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px}
+.sub{color:#7d8590;font-size:14px;margin-bottom:28px}
+.section-label{font-size:12px;color:#7d8590;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase}
+.presets{display:flex;gap:8px;margin-bottom:24px}
+.preset-btn{
+  flex:1;padding:13px 6px;border-radius:10px;
+  border:1px solid #2a2a3a;background:#12121e;
+  color:#9ca3af;font-size:13px;font-weight:500;cursor:pointer;
+  transition:all .15s;
+}
+.preset-btn.on{border:2px solid #818cf8;background:rgba(129,140,248,.1);color:#a5b4fc}
+.summary{
+  background:#12121e;border-radius:12px;padding:16px 20px;
+  margin-bottom:24px;border:1px solid #1e1e30;
+}
+.row{display:flex;justify-content:space-between;font-size:14px;padding:5px 0}
+.row .k{color:#7d8590}
+.row .v{font-weight:500;font-variant-numeric:tabular-nums}
+.divider{border-top:1px solid #1e1e30;margin:6px 0;padding-top:8px}
+.note{font-size:12px;color:#555;margin-top:6px}
+
+.upload-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:14px;border-radius:10px;
+  border:1px dashed #2a2a3a;background:#12121e;
+  color:#818cf8;font-size:14px;cursor:pointer;
+  margin-bottom:10px;
+}
+.upload-btn input{display:none}
+.tracklist{
+  background:#12121e;border-radius:10px;padding:6px 14px;
+  margin-bottom:24px;border:1px solid #1e1e30;
+  max-height:140px;overflow-y:auto;
+}
+.track-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 0;font-size:13px;
+  border-bottom:1px solid #1a1a2a;
+}
+.track-row:last-child{border-bottom:none}
+.track-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px}
+.track-rm{background:none;border:none;color:#555;font-size:16px;cursor:pointer;padding:2px 6px}
+
+.go-btn{
+  width:100%;padding:16px;border-radius:12px;
+  background:#818cf8;color:#0a0a14;border:none;
+  font-size:16px;font-weight:600;cursor:pointer;
+  margin-top:8px;
+}
+
+/* WORKOUT */
+#workout{justify-content:center;position:relative}
+.progress-bar{position:fixed;top:0;left:0;right:0;height:4px;background:#1a1a2a;z-index:10}
+.progress-fill{height:100%;background:#818cf8;transition:width 1s linear}
+.phase-pill{
+  display:inline-block;padding:7px 22px;border-radius:20px;
+  font-size:14px;font-weight:600;letter-spacing:0.06em;
+  text-transform:uppercase;margin-bottom:14px;
+}
+.timer{
+  font-size:min(28vw, 110px);font-weight:700;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-0.03em;
+  margin-bottom:6px;
+}
+.round-info{color:#7d8590;font-size:16px;margin-bottom:36px}
+.music-bar{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 18px;background:#12121e;border-radius:10px;
+  border:1px solid #1e1e30;margin-bottom:36px;min-width:220px;
+}
+.music-bar.hidden{display:none}
+.music-btn{background:none;border:none;color:#7d8590;font-size:18px;cursor:pointer;padding:4px}
+.now-playing{
+  font-size:13px;max-width:170px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:center;
+}
+.controls{display:flex;gap:12px}
+.ctrl-btn{
+  padding:14px 32px;border-radius:10px;font-size:15px;
+  font-weight:600;cursor:pointer;border:1px solid #2a2a3a;
+}
+.ctrl-pause{background:#1e1e30;color:#f0f0f5}
+.ctrl-pause.paused{background:#818cf8;color:#0a0a14}
+.ctrl-end{background:transparent;color:#7d8590}
+
+/* DONE */
+#done{justify-content:center}
+.check{font-size:48px;margin-bottom:14px;color:#22c55e}
+.done-title{font-size:24px;font-weight:600;margin-bottom:8px}
+.done-time{color:#7d8590;font-size:16px;margin-bottom:6px}
+.done-detail{color:#555;font-size:14px;margin-bottom:32px}
+.again-btn{
+  padding:14px 36px;border-radius:10px;
+  background:#818cf8;color:#0a0a14;border:none;
+  font-size:15px;font-weight:600;cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup" class="screen active">
+  <div class="setup-inner">
+    <h1>HIIT Cycling</h1>
+    <p class="sub">Pick a plan, add your music, go.</p>
+
+    <p class="section-label">Intensity</p>
+    <div class="presets" id="presets"></div>
+
+    <div class="summary" id="summary"></div>
+
+    <p class="section-label">Your music (optional)</p>
+    <label class="upload-btn">
+      <span>+ Add audio files</span>
+      <input type="file" accept="audio/*" multiple id="fileInput">
+    </label>
+    <div class="tracklist" id="tracklist" style="display:none"></div>
+
+    <button class="go-btn" id="startBtn">Start</button>
+  </div>
+</div>
+
+<!-- WORKOUT -->
+<div id="workout" class="screen">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="phase-pill" id="phasePill"></div>
+  <div class="timer" id="timerDisplay">0:00</div>
+  <div class="round-info" id="roundInfo"></div>
+  <div class="music-bar hidden" id="musicBar">
+    <button class="music-btn" id="prevBtn">⏮</button>
+    <span class="now-playing" id="nowPlaying"></span>
+    <button class="music-btn" id="nextBtn">⏭</button>
+  </div>
+  <div class="controls">
+    <button class="ctrl-btn ctrl-pause" id="pauseBtn">Pause</button>
+    <button class="ctrl-btn ctrl-end" id="endBtn">End</button>
+  </div>
+</div>
+
+<!-- DONE -->
+<div id="done" class="screen">
+  <div class="check">&#10003;</div>
+  <div class="done-title">Done</div>
+  <div class="done-time" id="doneTime"></div>
+  <div class="done-detail" id="doneDetail"></div>
+  <button class="again-btn" id="againBtn">Again</button>
+</div>
+
+<audio id="audio"></audio>
+
+<script>
+const PRESETS=[
+  {id:"beginner",label:"Beginner",sprint:20,rest:60,rounds:8},
+  {id:"intermediate",label:"Intermediate",sprint:30,rest:60,rounds:10},
+  {id:"advanced",label:"Advanced",sprint:30,rest:30,rounds:12}
+];
+const WARMUP=300,COOLDOWN=180;
+const PHASE_MAP={warmup:{bg:"#b45309",label:"Warm up"},sprint:{bg:"#dc2626",label:"Sprint"},rest:{bg:"#16a34a",label:"Rest"},cooldown:{bg:"#2563eb",label:"Cool down"}};
+
+let presetIdx=1,tracks=[],trackIdx=0,seq=[],sIdx=0,timeLeft=0,elapsed=0,running=false,timer=null;
+let phaseDeadline=0,pauseRemaining=0,workoutStartedAt=0,totalPausedMs=0,pauseStartedAt=0,wakeLock=null;
+
+const $=id=>document.getElementById(id);
+const fmt=s=>{const m=Math.floor(s/60);return m+":"+(s%60).toString().padStart(2,"0")};
+const totalTime=c=>WARMUP+c.rounds*(c.sprint+c.rest)+COOLDOWN;
+
+async function requestWakeLock(){
+  try{if("wakeLock"in navigator){wakeLock=await navigator.wakeLock.request("screen")}}catch(e){}
+}
+function releaseWakeLock(){
+  try{if(wakeLock){wakeLock.release();wakeLock=null}}catch(e){}
+}
+
+function buildSeq(c){
+  const s=[{phase:"warmup",dur:WARMUP}];
+  for(let i=0;i<c.rounds;i++){
+    s.push({phase:"sprint",dur:c.sprint,round:i+1});
+    s.push({phase:"rest",dur:c.rest,round:i+1});
+  }
+  s.push({phase:"cooldown",dur:COOLDOWN});
+  return s;
+}
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+function renderPresets(){
+  const box=$("presets");
+  box.innerHTML="";
+  PRESETS.forEach((p,i)=>{
+    const b=document.createElement("button");
+    b.className="preset-btn"+(i===presetIdx?" on":"");
+    b.textContent=p.label;
+    b.onclick=()=>{presetIdx=i;renderPresets();renderSummary()};
+    box.appendChild(b);
+  });
+}
+
+function renderSummary(){
+  const c=PRESETS[presetIdx];
+  $("summary").innerHTML=`
+    <div class="row"><span class="k">Sprint</span><span class="v">${c.sprint}s</span></div>
+    <div class="row"><span class="k">Rest</span><span class="v">${c.rest}s</span></div>
+    <div class="row"><span class="k">Rounds</span><span class="v">${c.rounds}</span></div>
+    <div class="divider row"><span class="k">Total</span><span class="v">${fmt(totalTime(c))}</span></div>
+    <p class="note">Includes 5 min warmup + 3 min cooldown</p>`;
+}
+
+function renderTracks(){
+  const tl=$("tracklist");
+  if(tracks.length===0){tl.style.display="none";return}
+  tl.style.display="block";
+  tl.innerHTML="";
+  tracks.forEach((t,i)=>{
+    const r=document.createElement("div");r.className="track-row";
+    r.innerHTML=`<span class="track-name">${t.name}</span><button class="track-rm" data-i="${i}">&times;</button>`;
+    tl.appendChild(r);
+  });
+  tl.querySelectorAll(".track-rm").forEach(b=>b.onclick=e=>{
+    const i=+e.target.dataset.i;
+    URL.revokeObjectURL(tracks[i].url);
+    tracks.splice(i,1);
+    if(trackIdx>=tracks.length)trackIdx=0;
+    renderTracks();
+  });
+}
+
+$("fileInput").onchange=e=>{
+  Array.from(e.target.files).forEach(f=>{
+    tracks.push({name:f.name.replace(/\.[^.]+$/,""),url:URL.createObjectURL(f)});
+  });
+  e.target.value="";
+  renderTracks();
+};
+
+let audioCtx=null,beepBuffers={};
+
+function initAudio(){
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==="suspended")audioCtx.resume();
+  function makeBuf(freq,dur,vol){
+    const sr=audioCtx.sampleRate,n=Math.floor(sr*dur);
+    const buf=audioCtx.createBuffer(1,n,sr),d=buf.getChannelData(0);
+    for(let i=0;i<n;i++){
+      const env=Math.min(1,(n-i)/(sr*0.03));
+      d[i]=Math.sin(2*Math.PI*freq*i/sr)*vol*env;
+    }
+    return buf;
+  }
+  beepBuffers.tick=makeBuf(660,0.15,0.4);
+  beepBuffers.sprint=makeBuf(880,0.5,0.6);
+  beepBuffers.go=makeBuf(440,0.4,0.5);
+  playBeep("go");
+}
+
+function playBeep(type){
+  if(!audioCtx)return;
+  try{
+    if(audioCtx.state==="suspended")audioCtx.resume();
+    const key=type==="tick"?"tick":type==="sprint"?"sprint":"go";
+    const src=audioCtx.createBufferSource();
+    src.buffer=beepBuffers[key];
+    src.connect(audioCtx.destination);
+    src.start(0);
+  }catch(e){}
+}
+
+function loadTrack(){
+  const a=$("audio");
+  if(tracks.length===0){$("musicBar").classList.add("hidden");return}
+  $("musicBar").classList.remove("hidden");
+  $("nowPlaying").textContent=tracks[trackIdx]?.name||"";
+  a.src=tracks[trackIdx]?.url||"";
+  if(running)a.play().catch(()=>{});
+}
+
+function nextTrack(){if(tracks.length===0)return;trackIdx=(trackIdx+1)%tracks.length;loadTrack()}
+function prevTrack(){if(tracks.length===0)return;trackIdx=(trackIdx-1+tracks.length)%tracks.length;loadTrack()}
+
+$("audio").onended=nextTrack;
+$("prevBtn").onclick=prevTrack;
+$("nextBtn").onclick=nextTrack;
+
+function updateWorkoutUI(){
+  const cur=seq[sIdx];
+  if(!cur)return;
+  const p=PHASE_MAP[cur.phase];
+  $("phasePill").textContent=p.label;
+  $("phasePill").style.background=p.bg;
+  $("timerDisplay").textContent=fmt(timeLeft);
+  if(cur.phase==="sprint"||cur.phase==="rest"){
+    $("roundInfo").textContent="Round "+cur.round+" of "+PRESETS[presetIdx].rounds;
+  }else{
+    $("roundInfo").textContent=cur.phase==="warmup"?"Get ready":"Bring it down";
+  }
+  const pct=Math.min(elapsed/totalTime(PRESETS[presetIdx])*100,100);
+  $("progressFill").style.width=pct+"%";
+}
+
+function tick(){
+  if(!running)return;
+  if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();
+  const now=Date.now();
+  const remaining=phaseDeadline-now;
+  if(remaining<=0){
+    sIdx++;
+    while(sIdx<seq.length){
+      const overshoot=-remaining;
+      const nextDur=seq[sIdx].dur*1000;
+      if(overshoot<nextDur){
+        phaseDeadline=now+(nextDur-overshoot);
+        playBeep(seq[sIdx].phase==="sprint"?"sprint":"go");
+        break;
+      }
+      sIdx++;
+    }
+    if(sIdx>=seq.length){
+      running=false;clearInterval(timer);releaseWakeLock();
+      $("audio").pause();
+      elapsed=Math.round((now-workoutStartedAt-totalPausedMs)/1000);
+      $("doneTime").textContent=fmt(elapsed)+" total";
+      $("doneDetail").textContent=PRESETS[presetIdx].rounds+" rounds, "+PRESETS[presetIdx].sprint+"s sprint / "+PRESETS[presetIdx].rest+"s rest";
+      showScreen("done");
+      return;
+    }
+  }
+  const newTimeLeft=Math.ceil(Math.max(0,phaseDeadline-Date.now())/1000);
+  if(newTimeLeft!==timeLeft&&newTimeLeft<=3&&newTimeLeft>0)playBeep("tick");
+  timeLeft=newTimeLeft;
+  elapsed=Math.round((Date.now()-workoutStartedAt-totalPausedMs)/1000);
+  updateWorkoutUI();
+}
+
+function startWorkout(){
+  const c=PRESETS[presetIdx];
+  seq=buildSeq(c);sIdx=0;timeLeft=seq[0].dur;elapsed=0;running=true;
+  workoutStartedAt=Date.now();totalPausedMs=0;
+  phaseDeadline=Date.now()+seq[0].dur*1000;
+  trackIdx=0;
+  initAudio();
+  showScreen("workout");
+  updateWorkoutUI();
+  loadTrack();
+  requestWakeLock();
+  $("pauseBtn").textContent="Pause";
+  $("pauseBtn").classList.remove("paused");
+  clearInterval(timer);
+  timer=setInterval(tick,250);
+}
+
+$("startBtn").onclick=startWorkout;
+
+$("pauseBtn").onclick=()=>{
+  if(running){
+    running=false;
+    clearInterval(timer);
+    pauseRemaining=phaseDeadline-Date.now();
+    pauseStartedAt=Date.now();
+    $("pauseBtn").textContent="Resume";
+    $("pauseBtn").classList.add("paused");
+    $("audio").pause();
+    releaseWakeLock();
+  }else{
+    running=true;
+    phaseDeadline=Date.now()+pauseRemaining;
+    totalPausedMs+=Date.now()-pauseStartedAt;
+    timer=setInterval(tick,250);
+    $("pauseBtn").textContent="Pause";
+    $("pauseBtn").classList.remove("paused");
+    if(tracks.length>0)$("audio").play().catch(()=>{});
+    requestWakeLock();
+  }
+};
+
+$("endBtn").onclick=()=>{
+  running=false;clearInterval(timer);releaseWakeLock();
+  $("audio").pause();
+  showScreen("setup");
+};
+
+$("againBtn").onclick=()=>showScreen("setup");
+
+renderPresets();renderSummary();
+</script>
+</body>
+</html>
